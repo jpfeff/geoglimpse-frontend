@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import tiledGrid from '../assets/tiled_grid.json';
+import tiledGrid from '../../assets/tiled_grid.json';
 
 function MapComponent() {
   const mapRef = useRef(null);
