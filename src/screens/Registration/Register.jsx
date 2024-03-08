@@ -45,24 +45,12 @@ function Register() {
           <h2 className="register-header">Register</h2>
         </Form.Item>
         <Form.Item
-          label="Registration Code"
-          name="registrationCode"
+          label="Username"
+          name="username"
           rules={[
             {
               required: true,
-              message: 'Please input your registration code!',
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Organization Name"
-          name="orgName"
-          rules={[
-            {
-              required: true,
-              message: 'Please input your organization name!',
+              message: 'Please input a username!',
             },
           ]}
         >
@@ -75,7 +63,7 @@ function Register() {
             {
               required: true,
               message: 'Please input your email!',
-              type: 'email', // Added email type validation
+              type: 'email',
             },
           ]}
         >

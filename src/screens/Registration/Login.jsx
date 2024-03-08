@@ -5,12 +5,12 @@ import './index.scss';
 import { useNavigate } from 'react-router-dom';
 import authApi from '../../requests/authApi';
 
-function Register() {
-  const navigate = useNavigate();
+function Login() {
   const [messageApi, contextHolder] = message.useMessage();
+  const navigate = useNavigate();
 
   const onFinish = async (values) => {
-    const data = await authApi.register(values);
+    const data = await authApi.login(values);
     const { success, message: responseMessage } = data;
     if (success) {
       messageApi.success(responseMessage);
@@ -21,13 +21,12 @@ function Register() {
       messageApi.error(responseMessage);
     }
   };
-
   const onFinishFailed = (errorInfo) => {
     console.log('Failed:', errorInfo);
   };
 
   const onNavigate = () => {
-    navigate('/login');
+    navigate('/register');
   };
 
   return (
@@ -42,40 +41,15 @@ function Register() {
         autoComplete="off"
       >
         <Form.Item>
-          <h2 className="register-header">Register</h2>
+          <h2 className="register-header">Log in</h2>
         </Form.Item>
         <Form.Item
-          label="Registration Code"
-          name="registrationCode"
+          label="Username"
+          name="username"
           rules={[
             {
               required: true,
-              message: 'Please input your registration code!',
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Organization Name"
-          name="orgName"
-          rules={[
-            {
-              required: true,
-              message: 'Please input your organization name!',
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Email"
-          name="email"
-          rules={[
-            {
-              required: true,
-              message: 'Please input your email!',
-              type: 'email', // Added email type validation
+              message: 'Please input your username!',
             },
           ]}
         >
@@ -101,11 +75,11 @@ function Register() {
           </Button>
         </Form.Item>
         <Form.Item>
-          <a onClick={onNavigate}>Have an existing account? Log in</a>
+          <a onClick={onNavigate}>No account yet? Register</a>
         </Form.Item>
       </Form>
     </div>
   );
 }
 
-export default Register;
+export default Login;

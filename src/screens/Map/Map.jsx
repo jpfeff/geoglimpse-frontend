@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+/* eslint-disable consistent-return */
+import React, { useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -6,53 +8,40 @@ import tiledGrid from '../../assets/tiled_grid.json';
 
 function MapComponent() {
   const mapRef = useRef(null);
-  const [map, setMap] = useState(null);
-
-  console.log('hello');
-
-  console.log('tiledGrid', tiledGrid);
+  const tileFrequency = useSelector((state) => state.user.tileFrequency);
 
   useEffect(() => {
-    if (mapRef.current && !map) {
-      // Initialize the map
-      const initializedMap = L.map(mapRef.current).setView([43.7042, -72.2896], 17);
+    // Directly check if the map container already has a Leaflet instance
+    if (mapRef.current && !mapRef.current._leaflet_id) {
+      const initializedMap = L.map(mapRef.current).setView([43.7072, -72.2896], 15);
 
-      // Add OpenStreetMap tiles
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        // attribution:
-        //     '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
-        //     + ', Tiles courtesy of <a href="https://geo6.be/">GEO-6</a>',
         maxZoom: 18,
       }).addTo(initializedMap);
 
-      // Add a marker
-      // L.marker([51.505, -0.09]).addTo(initializedMap)
-      //   .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
-      //   .openPopup();
-
-      const polygonStyle = {
-        color: 'blue',
-        weight: 1,
-        opacity: 0.5,
-      };
-
       L.geoJSON(tiledGrid, {
-        style() {
-          return polygonStyle;
+        style: (feature) => {
+          const index = tiledGrid.features.indexOf(feature);
+          const frequency = tileFrequency[index.toString()] || 0;
+          const opacity = Math.min(frequency / 10, 1);
+
+          return {
+            color: 'black',
+            fillOpacity: 1 - opacity,
+            weight: 1,
+            opacity: 1 - opacity,
+          };
         },
       }).addTo(initializedMap);
 
-      // Store the map instance
-      setMap(initializedMap);
+      // Cleanup function to remove the map when the component unmounts or needs reinitialization
+      return () => {
+        if (initializedMap) {
+          initializedMap.remove();
+        }
+      };
     }
-
-    // Cleanup on component unmount
-    return () => {
-      if (map) {
-        map.remove();
-      }
-    };
-  }, [map]); // Depend on `map` to ensure cleanup and prevent reinitialization
+  }, [tileFrequency]); // React will only re-run the effect if tileFrequency changes
 
   return <div id="map" ref={mapRef} style={{ height: '40rem', width: '100%' }} />;
 }

@@ -13,7 +13,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </Provider>,
 );
-
-// ReactDOM.createRoot(document.getElementById('root')).render(
-//   <App />,
-// );
