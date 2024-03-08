@@ -1,7 +1,7 @@
 import {
   Routes, Route, Navigate, useNavigate,
 } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import Map from './screens/Map/Map';
 import Login from './screens/Registration/Login';
@@ -12,10 +12,12 @@ import authApi from './requests/authApi';
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const verifyUserSession = async () => {
       const response = await authApi.verifyUser();
+      console.log('response', response);
       if (response.status && response.user) {
         dispatch(setUser(response.user));
       } else if (window.location.pathname !== '/register' && window.location.pathname !== '/login') {
@@ -24,8 +26,14 @@ function App() {
       }
     };
 
+    setLoading(false);
+
     verifyUserSession();
   }, [navigate, dispatch]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Routes>

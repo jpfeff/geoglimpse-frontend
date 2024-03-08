@@ -15,12 +15,12 @@ const verifyUser = async () => {
 };
 
 const login = async (values) => {
-  const { email, password } = values;
+  const { username, password } = values;
   try {
     const { data } = await apiRequest({
       method: 'post',
       url: `${SERVER_URL}/api/auth/login`,
-      data: { email, password },
+      data: { username, password },
       withCredentials: true,
     });
     return data;
@@ -31,14 +31,14 @@ const login = async (values) => {
 
 const register = async (values) => {
   const {
-    email, password, orgName, registrationCode,
+    email, password, username,
   } = values;
   try {
     const { data } = await apiRequest({
       method: 'post',
       url: `${SERVER_URL}/api/auth/register`,
       data: {
-        email, password, orgName, registrationCode,
+        email, password, username,
       },
       withCredentials: true,
     });
@@ -48,24 +48,8 @@ const register = async (values) => {
   }
 };
 
-const registerWithInvitation = async (values, invitationToken) => {
-  const { email, password } = values;
-  try {
-    const { data } = await apiRequest({
-      method: 'post',
-      url: `${SERVER_URL}/api/auth/register/${invitationToken}`,
-      data: { email, password },
-      withCredentials: true,
-    });
-    return data;
-  } catch (error) {
-    throw new Error(`Error registering with invitation: ${error}`);
-  }
-};
-
 export default {
   verifyUser,
   login,
   register,
-  registerWithInvitation,
 };

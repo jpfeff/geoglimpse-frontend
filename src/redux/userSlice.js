@@ -3,7 +3,12 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import SERVER_URL from '../constants';
 import apiRequest from '../services';
 
-const initialState = null;
+const initialState = {
+  username: null,
+  email: null,
+  id: null,
+  tileFrequency: {},
+};
 
 export const logout = createAsyncThunk('user/logout', async () => {
   try {
