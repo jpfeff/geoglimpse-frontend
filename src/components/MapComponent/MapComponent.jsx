@@ -2,42 +2,22 @@
 /* eslint-disable max-len */
 /* eslint-disable no-shadow */
 /* eslint-disable consistent-return */
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import L from 'leaflet';
-// import 'leaflet.heat';
 import 'leaflet/dist/leaflet.css';
 
-import tiledGrid from '../../assets/tiled_grid.json';
+// import tiledGrid from '../../assets/hex_grid13_smaller_area.json';
+import tiledGrid from '../../assets/hex_grid_test.json';
 
-function MapComponent({ mode }) {
+function MapComponent({ mode, baseLayer }) {
   const mapRef = useRef(null);
   const tileFrequency = useSelector((state) => state.user.tileFrequency);
+  const [map, setMap] = useState(null);
+  const geojsonLayerRef = useRef(null);
+  const maxZoom = 18;
 
-  // CONTINUOUS FUNCTION
-  // const getColorForFrequency = (frequency) => {
-  //   const maxFrequency = 10;
-
-  //   // scale the frequency to a value between 0 and 1
-  //   const normalizedFrequency = Math.min(frequency / maxFrequency, 1);
-  //   let red;
-  //   let green;
-  //   let blue;
-
-  //   if (normalizedFrequency < 0.5) {
-  //     const ratio = normalizedFrequency * 2;
-  //     // eslint-disable-next-line no-multi-assign
-  //     red = green = 255 * ratio;
-  //     blue = 255 * (1 - ratio);
-  //   } else {
-  //     const ratio = (normalizedFrequency - 0.5) * 2;
-  //     red = 255;
-  //     green = 255 * (1 - ratio);
-  //     blue = 0;
-  //   }
-
-  //   return `rgb(${red}, ${green}, ${blue})`;
-  // };
+  console.log('baseLayer', baseLayer);
 
   // DISCRETE FUNCTION
   const colorStops = [
@@ -84,63 +64,123 @@ function MapComponent({ mode }) {
   };
 
   useEffect(() => {
+    if (!mapRef.current) return;
     // Directly check if the map container already has a Leaflet instance
-    if (mapRef.current && !mapRef.current._leaflet_id) {
+
+    if (!mapRef.current._leaflet_id) {
       const initializedMap = L.map(mapRef.current, {
         // set max zoom level to 18
-        minZoom: 14.5,
+        minZoom: 15.5,
         maxBoundsViscosity: 0.8,
         zoomSnap: 0.5,
       });
 
-      initializedMap.setView([43.7100, -72.2896], 14.5);
+      initializedMap.setView([43.7051218896, -72.2881465766], 15.5);
       initializedMap.setMaxBounds(initializedMap.getBounds());
 
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-      }).addTo(initializedMap);
+      console.log('Initialized map', initializedMap.getBounds());
 
-      if (mode === 'Heat Map') {
-        L.geoJSON(tiledGrid, {
-          style: (feature) => {
-            const index = tiledGrid.features.indexOf(feature);
-            const frequency = tileFrequency[index.toString()] || 0;
+      setMap(initializedMap);
+    }
+  }, []);
 
-            return {
-              color: 'black',
-              fillColor: getColorForFrequency(frequency),
-              fillOpacity: 0.5,
-              weight: 0,
-            };
-          },
-        }).addTo(initializedMap);
-      } else {
-        L.geoJSON(tiledGrid, {
-          style: (feature) => {
-            const index = tiledGrid.features.indexOf(feature);
-            const frequency = tileFrequency[index.toString()] || 0;
-            const opacity = Math.min(frequency / 10, 1);
+  useEffect(() => {
+    if (!map) return;
 
-            return {
-              color: 'black',
-              fillOpacity: 1 - opacity,
-              weight: 1,
-              opacity: 1 - opacity,
-            };
-          },
-        }).addTo(initializedMap);
+    let currentBaseLayer;
+
+    const baseLayers = {
+      simple: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+      satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      default: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      watercolor: 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.{ext}',
+    };
+
+    const ext = {
+      watercolor: 'jpg',
+    };
+
+    const changeBaseLayer = (baseLayerKey) => {
+      // remove old base layer
+      if (currentBaseLayer) {
+        map.removeLayer(currentBaseLayer);
       }
 
-      // Cleanup function to remove the map when the component unmounts or needs reinitialization
-      return () => {
-        if (initializedMap) {
-          initializedMap.remove();
-        }
-      };
-    }
-  }, [tileFrequency, mode]);
+      // add new base layer
+      currentBaseLayer = L.tileLayer(baseLayers[baseLayerKey], {
+        ext: ext[baseLayerKey],
+        maxZoom,
+      }).addTo(map);
+    };
 
-  return <div id="map" ref={mapRef} style={{ height: '42rem', width: '80rem' }} />;
+    changeBaseLayer(baseLayer);
+
+    // cleanup
+    return () => {
+      if (currentBaseLayer) {
+        map.removeLayer(currentBaseLayer);
+      }
+    };
+  }, [baseLayer, map]);
+
+  useEffect(
+    () => {
+    // add the geojson layer here
+      if (!map) return;
+
+      if (geojsonLayerRef.current) {
+        map.removeLayer(geojsonLayerRef.current);
+        geojsonLayerRef.current = null;
+      }
+
+      const createGeoJsonLayer = () => L.geoJSON(tiledGrid, {
+        renderer: L.canvas(),
+        style: (feature) => {
+          const index = tiledGrid.features.indexOf(feature) + 1;
+
+          // handle heat map mode
+          if (mode === 'Heat Map') {
+            const frequency = tileFrequency[index.toString()] || 0;
+            const color = getColorForFrequency(frequency);
+
+            return {
+              color,
+              fillColor: color,
+              fillOpacity: 0.5,
+              opacity: 0.2,
+              weight: 1,
+            };
+          }
+
+          // handle unlocked area mode
+          let frequency = tileFrequency[index.toString()] || 0;
+          frequency = Math.floor(frequency);
+
+          if (frequency === 0) {
+            return {
+              color: 'black',
+              fillOpacity: 0.92,
+              weight: 1,
+              opacity: 1,
+            };
+          }
+          return {
+            color: 'black',
+            fillOpacity: 0,
+            weight: 1,
+            opacity: 0,
+          };
+        },
+      });
+
+      const newGeojsonLayer = createGeoJsonLayer();
+      newGeojsonLayer.addTo(map);
+      geojsonLayerRef.current = newGeojsonLayer;
+    },
+    [mode, tileFrequency, map],
+  );
+
+  return <div id="map" ref={mapRef} style={{ height: '42rem', width: '50rem' }} />;
 }
 
 export default MapComponent;
