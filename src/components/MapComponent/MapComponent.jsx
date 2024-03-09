@@ -10,11 +10,14 @@ import 'leaflet/dist/leaflet.css';
 // import tiledGrid from '../../assets/hex_grid13_smaller_area.json';
 import tiledGrid from '../../assets/hex_grid_test.json';
 
-function MapComponent({ mode }) {
+function MapComponent({ mode, baseLayer }) {
   const mapRef = useRef(null);
   const tileFrequency = useSelector((state) => state.user.tileFrequency);
   const [map, setMap] = useState(null);
   const geojsonLayerRef = useRef(null);
+  const maxZoom = 18;
+
+  console.log('baseLayer', baseLayer);
 
   // DISCRETE FUNCTION
   const colorStops = [
@@ -77,13 +80,48 @@ function MapComponent({ mode }) {
 
       console.log('Initialized map', initializedMap.getBounds());
 
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-      }).addTo(initializedMap);
-
       setMap(initializedMap);
     }
   }, []);
+
+  useEffect(() => {
+    if (!map) return;
+
+    let currentBaseLayer;
+
+    const baseLayers = {
+      simple: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+      satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      default: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      watercolor: 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.{ext}',
+    };
+
+    const ext = {
+      watercolor: 'jpg',
+    };
+
+    const changeBaseLayer = (baseLayerKey) => {
+      // remove old base layer
+      if (currentBaseLayer) {
+        map.removeLayer(currentBaseLayer);
+      }
+
+      // add new base layer
+      currentBaseLayer = L.tileLayer(baseLayers[baseLayerKey], {
+        ext: ext[baseLayerKey],
+        maxZoom,
+      }).addTo(map);
+    };
+
+    changeBaseLayer(baseLayer);
+
+    // cleanup
+    return () => {
+      if (currentBaseLayer) {
+        map.removeLayer(currentBaseLayer);
+      }
+    };
+  }, [baseLayer, map]);
 
   useEffect(
     () => {
@@ -95,7 +133,6 @@ function MapComponent({ mode }) {
         geojsonLayerRef.current = null;
       }
 
-      console.time('Total Color Calculation Time');
       const createGeoJsonLayer = () => L.geoJSON(tiledGrid, {
         renderer: L.canvas(),
         style: (feature) => {
@@ -136,13 +173,9 @@ function MapComponent({ mode }) {
         },
       });
 
-      console.timeEnd('Total Color Calculation Time');
-
-      console.time('Total GeoJSON Layer Creation Time');
       const newGeojsonLayer = createGeoJsonLayer();
       newGeojsonLayer.addTo(map);
       geojsonLayerRef.current = newGeojsonLayer;
-      console.timeEnd('Total GeoJSON Layer Creation Time');
     },
     [mode, tileFrequency, map],
   );

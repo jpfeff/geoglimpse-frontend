@@ -3,7 +3,7 @@ import {
 } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import Map from './screens/Map/Map';
+import Home from './screens/Home/Home';
 import Login from './screens/Registration/Login';
 import Register from './screens/Registration/Register';
 import { setUser, logout } from './redux/userSlice';
@@ -16,19 +16,24 @@ function App() {
 
   useEffect(() => {
     const verifyUserSession = async () => {
-      const response = await authApi.verifyUser();
-      console.log('response', response);
-      if (response.status && response.user) {
-        dispatch(setUser(response.user));
-      } else if (window.location.pathname !== '/register' && window.location.pathname !== '/login') {
+      try {
+        const response = await authApi.verifyUser();
+        console.log('response', response);
+        console.log('response', response);
+        if (response.status && response.user) {
+          dispatch(setUser(response.user));
+        } else if (window.location.pathname !== '/register' && window.location.pathname !== '/login') {
+          dispatch(logout());
+          navigate('/login');
+        }
+      } catch (error) {
         dispatch(logout());
         navigate('/login');
       }
     };
+    verifyUserSession();
 
     setLoading(false);
-
-    verifyUserSession();
   }, [navigate, dispatch]);
 
   if (loading) {
@@ -37,7 +42,7 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Map />} />
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="*" element={<Navigate to="/" />} />
