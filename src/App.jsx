@@ -2,7 +2,7 @@ import {
   Routes, Route, Navigate, useNavigate,
 } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Home from './screens/Home/Home';
 import Login from './screens/Registration/Login';
 import Register from './screens/Registration/Register';
@@ -14,6 +14,7 @@ function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const user = useSelector((state) => state.user);
 
   useEffect(() => {
     const verifyUserSession = async () => {
@@ -29,14 +30,15 @@ function App() {
       } catch (error) {
         dispatch(logout());
         navigate('/login');
+      } finally {
+        setLoading(false);
       }
     };
+
     verifyUserSession();
+  }, [navigate, dispatch, user && user._id]);
 
-    setLoading(false);
-  }, [navigate, dispatch]);
-
-  if (loading) {
+  if (loading || (!user && window.location.pathname !== '/login' && window.location.pathname !== '/register')) {
     return <div>Loading...</div>;
   }
 

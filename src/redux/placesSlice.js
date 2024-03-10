@@ -56,6 +56,11 @@ export const createPlace = createAsyncThunk(
   },
 );
 
+export const clearPlaces = createAsyncThunk(
+  'places/clearPlaces',
+  async () => [],
+);
+
 // Don't need to worry about param reassign coming from eslint cause slice uses immer
 const placesSlice = createSlice({
   name: 'places',
@@ -110,6 +115,9 @@ const placesSlice = createSlice({
       .addCase(createPlace.rejected, (state, action) => {
         state.status = 'idle';
         state.error = action.error.message;
+      })
+      .addCase(clearPlaces.fulfilled, (state) => {
+        state.places = [];
       });
   },
 });

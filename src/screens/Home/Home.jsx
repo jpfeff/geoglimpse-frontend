@@ -10,11 +10,12 @@ import { logout } from '../../redux/userSlice';
 import './index.scss';
 import tiledGrid from '../../assets/hex_grid_test.json';
 import LatLngToAddress from '../../utils/geocoder';
+import { clearPlaces } from '../../redux/placesSlice';
 
 function Home() {
   const [mode, setMode] = useState('Unlocked Area');
   const [baseLayer, setBaseLayer] = useState('default');
-  const [address, setAddress] = useState('Unknown');
+  const [address, setAddress] = useState(null);
   const [numPlacesVisited, setNumPlacesVisited] = useState(null);
 
   const dispatch = useDispatch();
@@ -22,8 +23,6 @@ function Home() {
 
   const user = useSelector((state) => state.user);
   const places = useSelector((state) => state.places.places);
-
-  console.log('user', user);
 
   const getMax = (obj) => {
     let max = 0;
@@ -58,6 +57,8 @@ function Home() {
   useEffect(() => {
     if (Object.keys(user.tileFrequency).length > 0) {
       getAddress();
+    } else if (user) {
+      setAddress('Unavailable');
     }
   }, [user]);
 
@@ -75,6 +76,7 @@ function Home() {
 
   const onLogOut = () => {
     navigate('/login');
+    dispatch(clearPlaces());
     dispatch(logout());
   };
 
@@ -115,14 +117,14 @@ function Home() {
             title="Tiles Explored"
             value={Object.keys(user.tileFrequency).length}
             suffix={`/ 40320 (${((Object.keys(user.tileFrequency).length / 40320) * 100).toFixed(2)}%)`}
-            loading={Object.keys(user.tileFrequency).length === 0}
+            loading={!user.tileFrequency}
           />
           <Statistic
             title="Total Area Explored"
             value={Object.keys(user.tileFrequency).length * 110}
             suffix="m²"
             prefix="~"
-            loading={Object.keys(user.tileFrequency).length === 0}
+            loading={!user.tileFrequency}
           />
           <Statistic
             title="Places Visited"
@@ -131,8 +133,8 @@ function Home() {
           />
           <Statistic
             title="Most Time Spent"
-            value={address}
-            loading={address === 'Unknown'}
+            value={address === 'Unavailable' ? 'Unavailable' : address}
+            loading={!address}
           />
         </div>
       </div>

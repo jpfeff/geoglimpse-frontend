@@ -183,8 +183,7 @@ function MapComponent({ mode, baseLayer }) {
           }
 
           // handle unlocked area mode
-          let frequency = tileFrequency[index.toString()] || 0;
-          frequency = Math.floor(frequency);
+          const frequency = tileFrequency[index.toString()] || 0;
 
           if (frequency === 0) {
             return {
