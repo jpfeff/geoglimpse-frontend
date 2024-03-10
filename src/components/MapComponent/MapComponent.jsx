@@ -6,6 +6,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import MapPin from '../../assets/map_pin2.png';
+import './index.scss';
 
 // import tiledGrid from '../../assets/hex_grid13_smaller_area.json';
 import tiledGrid from '../../assets/hex_grid_test.json';
@@ -17,7 +19,8 @@ function MapComponent({ mode, baseLayer }) {
   const geojsonLayerRef = useRef(null);
   const maxZoom = 18;
 
-  console.log('baseLayer', baseLayer);
+  const places = useSelector((state) => state.places.places);
+  const user = useSelector((state) => state.user);
 
   // DISCRETE FUNCTION
   const colorStops = [
@@ -78,11 +81,37 @@ function MapComponent({ mode, baseLayer }) {
       initializedMap.setView([43.7051218896, -72.2881465766], 15.5);
       initializedMap.setMaxBounds(initializedMap.getBounds());
 
-      console.log('Initialized map', initializedMap.getBounds());
-
       setMap(initializedMap);
     }
   }, []);
+
+  useEffect(() => {
+    if (!map || !user) return;
+
+    // filter the places if user._id is not in place.discoveredBy array of objects, which include user objects
+
+    const filteredPlaces = places.filter(
+      (place) => place.discoveredBy.some(
+        (discovery) => discovery.user && discovery.user._id === user._id,
+      ),
+    );
+
+    filteredPlaces.forEach((place) => {
+      const lat = place.location.coordinates[1];
+      const lng = place.location.coordinates[0];
+
+      L.marker([lat, lng], {
+        icon: L.icon({
+          iconUrl: MapPin,
+          iconSize: [30, 30],
+          riseOnHover: true,
+          offset: [0, 10],
+          iconAnchor: [15, 30],
+        }),
+      }).bindPopup(place.name)
+        .addTo(map);
+    });
+  }, [map, places, user]);
 
   useEffect(() => {
     if (!map) return;
@@ -134,7 +163,7 @@ function MapComponent({ mode, baseLayer }) {
       }
 
       const createGeoJsonLayer = () => L.geoJSON(tiledGrid, {
-        renderer: L.canvas(),
+        renderer: L.canvas({ padding: 0.4 }),
         style: (feature) => {
           const index = tiledGrid.features.indexOf(feature) + 1;
 
@@ -143,6 +172,7 @@ function MapComponent({ mode, baseLayer }) {
             const frequency = tileFrequency[index.toString()] || 0;
             const color = getColorForFrequency(frequency);
 
+            // if base layer is heat map, make opacity 0.5
             return {
               color,
               fillColor: color,

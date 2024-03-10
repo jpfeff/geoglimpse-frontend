@@ -8,6 +8,7 @@ import Login from './screens/Registration/Login';
 import Register from './screens/Registration/Register';
 import { setUser, logout } from './redux/userSlice';
 import authApi from './requests/authApi';
+import { getViewablePlaces } from './redux/placesSlice';
 
 function App() {
   const dispatch = useDispatch();
@@ -18,10 +19,9 @@ function App() {
     const verifyUserSession = async () => {
       try {
         const response = await authApi.verifyUser();
-        console.log('response', response);
-        console.log('response', response);
         if (response.status && response.user) {
           dispatch(setUser(response.user));
+          dispatch(getViewablePlaces(response.user._id));
         } else if (window.location.pathname !== '/register' && window.location.pathname !== '/login') {
           dispatch(logout());
           navigate('/login');
