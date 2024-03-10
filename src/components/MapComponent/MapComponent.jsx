@@ -3,11 +3,14 @@
 /* eslint-disable no-shadow */
 /* eslint-disable consistent-return */
 import React, { useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import MapPin from '../../assets/map_pin2.png';
 import './index.scss';
+import { setUser } from '../../redux/userSlice';
+import authApi from '../../requests/authApi';
+import { getViewablePlaces } from '../../redux/placesSlice';
 
 // import tiledGrid from '../../assets/hex_grid13_smaller_area.json';
 import tiledGrid from '../../assets/hex_grid_test.json';
@@ -21,19 +24,49 @@ function MapComponent({ mode, baseLayer }) {
 
   const places = useSelector((state) => state.places.places);
   const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+
+  // re-fetch the user object every few seconds
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      console.log('fetching user');
+      const response = await authApi.verifyUser();
+      if (response.status && response.user) {
+        dispatch(setUser(response.user));
+        dispatch(getViewablePlaces(response.user._id));
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // DISCRETE FUNCTION
+  // const colorStops = [
+  //   { offset: 0.0, color: '#2c7bb6' },
+  //   { offset: 0.125, color: '#00a6ca' },
+  //   { offset: 0.25, color: '#00ccbc' },
+  //   { offset: 0.375, color: '#90eb9d' },
+  //   { offset: 0.5, color: '#ffff8c' },
+  //   { offset: 0.625, color: '#f9d057' },
+  //   { offset: 0.75, color: '#f29e2e' },
+  //   { offset: 0.875, color: '#e76818' },
+  //   { offset: 1.0, color: '#d7191c' },
+  // ];
+
   const colorStops = [
     { offset: 0.0, color: '#2c7bb6' },
-    { offset: 0.125, color: '#00a6ca' },
-    { offset: 0.25, color: '#00ccbc' },
-    { offset: 0.375, color: '#90eb9d' },
-    { offset: 0.5, color: '#ffff8c' },
-    { offset: 0.625, color: '#f9d057' },
-    { offset: 0.75, color: '#f29e2e' },
-    { offset: 0.875, color: '#e76818' },
+    { offset: 0.025, color: '#00a6ca' },
+    { offset: 0.05, color: '#00ccbc' },
+    { offset: 0.1, color: '#90eb9d' },
+    { offset: 0.3, color: '#ffff8c' },
+    { offset: 0.5, color: '#f9d057' },
+    { offset: 0.65, color: '#f29e2e' },
+    { offset: 0.8, color: '#e76818' },
     { offset: 1.0, color: '#d7191c' },
   ];
+
+  // shift the color stops to the right by adjusting the threshold
 
   const getColorForFrequency = (frequency) => {
     const maxFrequency = 10;

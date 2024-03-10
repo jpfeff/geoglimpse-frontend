@@ -60,7 +60,7 @@ function Home() {
     } else if (user) {
       setAddress('Unavailable');
     }
-  }, [user]);
+  }, [user._id]);
 
   useEffect(() => {
     if (places.length > 0) {
