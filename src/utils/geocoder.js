@@ -18,17 +18,9 @@ setDefaults({
   region: 'es',
 });
 
-console.log('VITE_MAPS_API_KEY', VITE_MAPS_API_KEY);
-
-console.log('MAPS_API_KEY', VITE_MAPS_API_KEY);
-
 const LatLngToAddress = async (lat, lng) => {
-  console.log('lat', lat);
-  console.log('lng', lng);
   try {
     const response = await fromLatLng(lat, lng);
-    console.log('response', response.results[0].formatted_address);
-    console.log('fillResponse', response);
     return response.results[0].formatted_address;
   } catch (error) {
     console.error(error);
