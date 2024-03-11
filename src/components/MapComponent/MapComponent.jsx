@@ -3,14 +3,14 @@
 /* eslint-disable no-shadow */
 /* eslint-disable consistent-return */
 import React, { useEffect, useRef, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import MapPin from '../../assets/map_pin2.png';
 import './index.scss';
-import { setUser } from '../../redux/userSlice';
-import authApi from '../../requests/authApi';
-import { getViewablePlaces } from '../../redux/placesSlice';
+// import { setUser } from '../../redux/userSlice';
+// import authApi from '../../requests/authApi';
+// import { getViewablePlaces } from '../../redux/placesSlice';
 
 // import tiledGrid from '../../assets/hex_grid13_smaller_area.json';
 import tiledGrid from '../../assets/hex_grid_test.json';
@@ -24,22 +24,22 @@ function MapComponent({ mode, baseLayer }) {
 
   const places = useSelector((state) => state.places.places);
   const user = useSelector((state) => state.user);
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   // re-fetch the user object every few seconds
 
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      console.log('fetching user');
-      const response = await authApi.verifyUser();
-      if (response.status && response.user) {
-        dispatch(setUser(response.user));
-        dispatch(getViewablePlaces(response.user._id));
-      }
-    }, 5000);
+  // useEffect(() => {
+  //   const interval = setInterval(async () => {
+  //     console.log('fetching user');
+  //     const response = await authApi.verifyUser();
+  //     if (response.status && response.user) {
+  //       dispatch(setUser(response.user));
+  //       dispatch(getViewablePlaces(response.user._id));
+  //     }
+  //   }, 5000);
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   // DISCRETE FUNCTION
   // const colorStops = [
